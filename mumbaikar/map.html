@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Mumbai Rail Map — Mumbaikar</title>
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width: 100%; height: 100%;
+  background: #111;
+  overflow: hidden;
+  touch-action: none;
+}
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: rgba(17,17,17,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.back-btn {
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none;
+  color: white; font-size: 15px;
+  cursor: pointer; padding: 4px 2px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.back-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+.topbar-title {
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+#canvas {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+#canvas:active { cursor: grabbing; }
+#map {
+  position: absolute;
+  transform-origin: 0 0;
+  user-select: none;
+  -webkit-user-drag: none;
+  max-width: none;
+  display: block;
+}
+
+.hint {
+  position: fixed;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.72);
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+  padding: 7px 16px;
+  border-radius: 24px;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: opacity 0.6s;
+}
+.loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  z-index: 5;
+  transition: opacity 0.4s;
+}
+.loader-ring {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(255,255,255,0.12);
+  border-top-color: #CC1B2F;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">
+    <svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" viewBox="0 0 20 20">
+      <path d="M13 4L7 10l6 6"/>
+    </svg>
+    Back
+  </button>
+  <span class="topbar-title">Mumbai Rail Map</span>
+</div>
+
+<div class="loader" id="loader">
+  <div class="loader-ring"></div>
+</div>
+
+<div id="canvas">
+  <img id="map"
+       src="https://maps.localsofmumbai.com/en/hybrid.jpg"
+       alt="Mumbai Rail Map"
+       draggable="false">
+</div>
+
+<div class="hint" id="hint">Pinch to zoom · Drag to pan · Double-tap to reset</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const img    = document.getElementById('map');
+const loader = document.getElementById('loader');
+const hint   = document.getElementById('hint');
+
+let tx = 0, ty = 0, scale = 1;
+let minScale = 0.5, maxScale = 10;
+
+function draw() {
+  img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+}
+
+function clamp() {
+  const iw = img.naturalWidth  * scale;
+  const ih = img.naturalHeight * scale;
+  const cw = canvas.clientWidth;
+  const ch = canvas.clientHeight;
+  const ox = Math.max(0, (iw - cw) / 2);
+  const oy = Math.max(0, (ih - ch) / 2);
+  tx = Math.min(ox, Math.max(-ox, tx));
+  ty = Math.min(oy, Math.max(-oy, ty));
+}
+
+function fitToScreen() {
+  const sw = canvas.clientWidth  / img.naturalWidth;
+  const sh = canvas.clientHeight / img.naturalHeight;
+  scale = Math.min(sw, sh);
+  minScale = scale * 0.9;
+  tx = (canvas.clientWidth  - img.naturalWidth  * scale) / 2;
+  ty = (canvas.clientHeight - img.naturalHeight * scale) / 2;
+  draw();
+}
+
+img.onload = () => {
+  loader.style.opacity = '0';
+  setTimeout(() => loader.style.display = 'none', 400);
+  fitToScreen();
+  setTimeout(() => hint.style.opacity = '0', 2800);
+};
+
+// ── Touch handling ──────────────────────────────────────────
+let touches = [];
+let lastDist = 0, lastMidX = 0, lastMidY = 0;
+let dragStartX = 0, dragStartY = 0;
+let lastTap = 0;
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  touches = Array.from(e.touches);
+  if (touches.length === 1) {
+    dragStartX = touches[0].clientX - tx;
+    dragStartY = touches[0].clientY - ty;
+  } else if (touches.length === 2) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    lastDist = Math.hypot(dx, dy);
+    lastMidX = (touches[0].clientX + touches[1].clientX) / 2;
+    lastMidY = (touches[0].clientY + touches[1].clientY) / 2;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  touches = Array.from(e.touches);
+
+  if (touches.length === 1) {
+    tx = touches[0].clientX - dragStartX;
+    ty = touches[0].clientY - dragStartY;
+    clamp();
+    draw();
+
+  } else if (touches.length === 2) {
+    const dx   = touches[0].clientX - touches[1].clientX;
+    const dy   = touches[0].clientY - touches[1].clientY;
+    const dist = Math.hypot(dx, dy);
+    const midX = (touches[0].clientX + touches[1].clientX) / 2;
+    const midY = (touches[0].clientY + touches[1].clientY) / 2;
+
+    const ratio    = dist / lastDist;
+    const newScale = Math.min(maxScale, Math.max(minScale, scale * ratio));
+
+    // Zoom toward pinch midpoint
+    tx = midX - (midX - tx) * (newScale / scale) + (midX - lastMidX);
+    ty = midY - (midY - ty) * (newScale / scale) + (midY - lastMidY);
+    scale = newScale;
+
+    lastDist = dist;
+    lastMidX = midX;
+    lastMidY = midY;
+    clamp();
+    draw();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  // Double-tap to reset
+  const now = Date.now();
+  if (e.changedTouches.length === 1 && now - lastTap < 280) {
+    fitToScreen();
+  }
+  lastTap = now;
+  if (e.touches.length === 1) {
+    dragStartX = e.touches[0].clientX - tx;
+    dragStartY = e.touches[0].clientY - ty;
+  }
+});
+
+// ── Mouse (desktop preview) ─────────────────────────────────
+let isDragging = false, msx = 0, msy = 0;
+canvas.addEventListener('mousedown', e => {
+  isDragging = true;
+  msx = e.clientX - tx;
+  msy = e.clientY - ty;
+});
+canvas.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  tx = e.clientX - msx;
+  ty = e.clientY - msy;
+  clamp(); draw();
+});
+canvas.addEventListener('mouseup',   () => isDragging = false);
+canvas.addEventListener('mouseleave',() => isDragging = false);
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 0.88;
+  const newScale = Math.min(maxScale, Math.max(minScale, scale * factor));
+  tx = e.clientX - (e.clientX - tx) * (newScale / scale);
+  ty = e.clientY - (e.clientY - ty) * (newScale / scale);
+  scale = newScale;
+  clamp(); draw();
+}, { passive: false });
+</script>
+</body>
+</html>

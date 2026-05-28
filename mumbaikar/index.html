@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mumbaikar</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#CC1B2F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mumbaikar">
+<link rel="apple-touch-icon" href="icons/icon-512.png">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #F4A435;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+.header-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A1A;
+  letter-spacing: -0.3px;
+}
+.menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.menu-btn span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #1A1A1A;
+  border-radius: 2px;
+}
+
+.content { padding: 8px 20px 40px; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(26,26,26,0.45);
+  margin-bottom: 12px;
+}
+
+.map-card {
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  active: transform scale(0.98);
+  transition: transform 0.15s;
+}
+.map-card:active { transform: scale(0.98); }
+.map-thumb {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+  background: #eee;
+}
+.map-card-footer {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.map-info-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+.map-info-sub {
+  font-size: 12px;
+  color: rgba(26,26,26,0.45);
+  margin-top: 3px;
+}
+.map-arrow {
+  width: 36px;
+  height: 36px;
+  background: #CC1B2F;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer {
+  padding: 0 20px 32px;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom));
+  text-align: center;
+}
+.footer-text { font-size: 12px; color: rgba(26,26,26,0.38); }
+.footer-link { color: rgba(26,26,26,0.55); text-decoration: none; font-weight: 500; }
+
+/* Overlay */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.28s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+/* Drawer */
+.drawer {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 82%; max-width: 300px;
+  background: white;
+  z-index: 101;
+  transform: translateX(-100%);
+  transition: transform 0.28s ease;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.drawer.open { transform: translateX(0); }
+
+.drawer-header {
+  background: #CC1B2F;
+  padding: 20px 20px 20px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+.drawer-icon {
+  width: 52px; height: 52px;
+  border-radius: 13px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.drawer-name { font-size: 20px; font-weight: 700; color: white; }
+.drawer-tagline { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 3px; }
+
+.drawer-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px;
+  text-decoration: none; color: #222;
+  font-size: 15px; font-weight: 400;
+  border: none; background: none;
+  width: 100%; text-align: left; cursor: pointer;
+}
+.nav-item:active { background: #fafafa; }
+.nav-item svg { width: 20px; height: 20px; stroke: #999; flex-shrink: 0; }
+.nav-divider { height: 1px; background: #f2f2f2; margin: 4px 0; }
+
+.drawer-foot {
+  padding: 14px 20px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px solid #f2f2f2;
+}
+.drawer-version { font-size: 12px; color: #bbb; }
+.drawer-lom { font-size: 11px; color: #ccc; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <img src="icons/icon-512.png" class="drawer-icon" alt="">
+    <div class="drawer-name">Mumbaikar</div>
+    <div class="drawer-tagline">Mumbai Suburban Rail Map</div>
+  </div>
+  <nav class="drawer-nav">
+    <a href="map.html" class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+      Browse Map
+    </a>
+    <a href="lines.html" class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+      Mumbai Suburban Lines
+    </a>
+    <a href="ticket.html" class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+      Ticketing System
+    </a>
+    <div class="nav-divider"></div>
+    <a href="about.html" class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+      About
+    </a>
+    <button class="nav-item" onclick="shareApp()">
+      <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+      Share this App
+    </button>
+    <a href="mailto:contact@localsofmumbai.com" class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+      Feedback
+    </a>
+    <a href="tos.html" class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Terms &amp; Conditions
+    </a>
+  </nav>
+  <div class="drawer-foot">
+    <div class="drawer-version">App Version 4.0.0</div>
+    <div class="drawer-lom">Explore more at localsofmumbai.com</div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo-row">
+    <img src="icons/icon-192.png" class="logo-img" alt="">
+    <span class="header-title">Mumbaikar</span>
+  </div>
+  <button class="menu-btn" onclick="openDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<div class="content">
+  <div class="section-label">Maps</div>
+  <a href="map.html" class="map-card">
+    <img src="https://maps.localsofmumbai.com/en/hybrid.jpg"
+         class="map-thumb"
+         alt="Mumbai Rail Map — Hybrid"
+         loading="eager">
+    <div class="map-card-footer">
+      <div>
+        <div class="map-info-name">Mumbai Rail Map</div>
+        <div class="map-info-sub">Hybrid · Semi-geographic · All lines</div>
+      </div>
+      <div class="map-arrow">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </div>
+    </div>
+  </a>
+</div>
+
+<div class="footer">
+  <p class="footer-text">Explore more at <a href="https://localsofmumbai.com" class="footer-link" target="_blank">localsofmumbai.com</a></p>
+</div>
+
+<script>
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function shareApp() {
+  closeDrawer();
+  if (navigator.share) {
+    navigator.share({
+      title: 'Mumbaikar',
+      text: 'Mumbai Rail Map — All lines, all stations. Free.',
+      url: 'https://localsofmumbai.github.io/mumbaikar/'
+    });
+  }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
