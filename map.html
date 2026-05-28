@@ -91,7 +91,6 @@ html, body {
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <button class="back-btn" onclick="history.back()">
     <svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" viewBox="0 0 20 20">
@@ -101,30 +100,26 @@ html, body {
   </button>
   <span class="topbar-title">Mumbai Rail Map</span>
 </div>
-
 <div class="loader" id="loader">
   <div class="loader-ring"></div>
   <div class="loader-text">Loading map…</div>
 </div>
-
 <div id="canvas">
-  <img id="map" src="https://localsofmumbai.github.io/MRM-Hybrid/build/jpg/mrm-hybrid-english.jpg" alt="Mumbai Rail Map" draggable="false">
+  <img id="map"
+       src="https://localsofmumbai.github.io/MRM-Hybrid/build/jpg/mrm-hybrid-english.jpg"
+       alt="Mumbai Rail Map"
+       draggable="false">
 </div>
-
 <div class="hint" id="hint">Pinch to zoom · Drag to pan · Double-tap to reset</div>
-
 <script>
 const canvas = document.getElementById('canvas');
 const img    = document.getElementById('map');
 const loader = document.getElementById('loader');
 const hint   = document.getElementById('hint');
-
 let tx = 0, ty = 0, scale = 1, minScale = 0.5, maxScale = 10;
-
 function draw() {
   img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
 }
-
 function clamp() {
   const iw = img.naturalWidth  * scale;
   const ih = img.naturalHeight * scale;
@@ -135,7 +130,6 @@ function clamp() {
   tx = Math.min(ox, Math.max(-ox, tx));
   ty = Math.min(oy, Math.max(-oy, ty));
 }
-
 function fitToScreen() {
   const sw = canvas.clientWidth  / img.naturalWidth;
   const sh = canvas.clientHeight / img.naturalHeight;
@@ -145,40 +139,37 @@ function fitToScreen() {
   ty = (canvas.clientHeight - img.naturalHeight * scale) / 2;
   draw();
 }
-
 img.onload = () => {
   loader.style.opacity = '0';
   setTimeout(() => loader.style.display = 'none', 400);
   fitToScreen();
   setTimeout(() => hint.style.opacity = '0', 2800);
 };
-
 img.onerror = () => {
-  document.querySelector('.loader-text').textContent = 'Map not found. Please add hybrid.jpg to your repo.';
+  document.querySelector('.loader-text').textContent = 'Could not load map. Check your connection.';
   document.querySelector('.loader-ring').style.display = 'none';
 };
-
-// Touch
 let lastDist = 0, lastMidX = 0, lastMidY = 0;
-let dragStartX = 0, dragStartY = 0, lastTap = 0;
-
+let dragStartX = 0, dragStartY = 0;
+let lastTap = 0, wasPinching = false;
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches;
   if (t.length === 1) {
     dragStartX = t[0].clientX - tx;
     dragStartY = t[0].clientY - ty;
+    setTimeout(() => { wasPinching = false; }, 350);
   } else if (t.length === 2) {
+    wasPinching = true;
     lastDist = Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
     lastMidX = (t[0].clientX + t[1].clientX) / 2;
     lastMidY = (t[0].clientY + t[1].clientY) / 2;
   }
 }, { passive: false });
-
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
   const t = e.touches;
-  if (t.length === 1) {
+  if (t.length === 1 && !wasPinching) {
     tx = t[0].clientX - dragStartX;
     ty = t[0].clientY - dragStartY;
     clamp(); draw();
@@ -194,24 +185,24 @@ canvas.addEventListener('touchmove', e => {
     clamp(); draw();
   }
 }, { passive: false });
-
 canvas.addEventListener('touchend', e => {
-  const now = Date.now();
-  if (e.changedTouches.length === 1 && now - lastTap < 280) {
-    fitToScreen();
+  if (!wasPinching) {
+    const now = Date.now();
+    if (e.changedTouches.length === 1 && e.touches.length === 0 && now - lastTap < 280) {
+      fitToScreen();
+    }
+    lastTap = Date.now();
   }
-  lastTap = now;
   if (e.touches.length === 1) {
     dragStartX = e.touches[0].clientX - tx;
     dragStartY = e.touches[0].clientY - ty;
   }
 });
-
-// Mouse (desktop)
 let isDragging = false, msx = 0, msy = 0;
 canvas.addEventListener('mousedown', e => { isDragging = true; msx = e.clientX - tx; msy = e.clientY - ty; });
 canvas.addEventListener('mousemove', e => { if (!isDragging) return; tx = e.clientX - msx; ty = e.clientY - msy; clamp(); draw(); });
 canvas.addEventListener('mouseup',   () => isDragging = false);
+canvas.addEventListener('mouseleave',() => isDragging = false);
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
   const f = e.deltaY < 0 ? 1.12 : 0.88;
