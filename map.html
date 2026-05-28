@@ -115,16 +115,16 @@ function clamp() {
   const ih = img.naturalHeight * scale;
   const cw = canvas.clientWidth;
   const ch = canvas.clientHeight;
-  const ox = Math.max(0, (iw - cw) / 2);
-  const oy = Math.max(0, (ih - ch) / 2);
-  tx = Math.min(ox, Math.max(-ox, tx));
-  ty = Math.min(oy, Math.max(-oy, ty));
+  if (iw <= cw) { tx = (cw - iw) / 2; }
+  else { tx = Math.min(0, Math.max(cw - iw, tx)); }
+  if (ih <= ch) { ty = (ch - ih) / 2; }
+  else { ty = Math.min(0, Math.max(ch - ih, ty)); }
 }
 function fitToScreen() {
   const sw = canvas.clientWidth  / img.naturalWidth;
   const sh = canvas.clientHeight / img.naturalHeight;
   scale = Math.min(sw, sh);
-  minScale = scale * 0.9;
+  minScale = scale;
   tx = (canvas.clientWidth  - img.naturalWidth  * scale) / 2;
   ty = (canvas.clientHeight - img.naturalHeight * scale) / 2;
   draw();
@@ -142,9 +142,7 @@ img.onerror = () => {
 };
 
 // ── Touch ──────────────────────────────────
-let startDist = 0, startScale = 1;
-let startMidX = 0, startMidY = 0;
-let startTx = 0, startTy = 0;
+let prevDist = 0, prevMidX = 0, prevMidY = 0;
 let dragStartX = 0, dragStartY = 0;
 let lastTap = 0, pinchEndTime = 0;
 
@@ -156,12 +154,9 @@ canvas.addEventListener('touchstart', e => {
     dragStartY = t[0].clientY - ty;
   } else if (t.length === 2) {
     isPinching = true;
-    startDist  = Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
-    startScale = scale;
-    startMidX  = (t[0].clientX + t[1].clientX) / 2;
-    startMidY  = (t[0].clientY + t[1].clientY) / 2;
-    startTx    = tx;
-    startTy    = ty;
+    prevDist = Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    prevMidX = (t[0].clientX + t[1].clientX) / 2;
+    prevMidY = (t[0].clientY + t[1].clientY) / 2;
   }
 }, { passive: false });
 
@@ -176,11 +171,11 @@ canvas.addEventListener('touchmove', e => {
     const dist = Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
     const midX = (t[0].clientX + t[1].clientX) / 2;
     const midY = (t[0].clientY + t[1].clientY) / 2;
-    const newScale = Math.min(maxScale, Math.max(minScale, startScale * dist / startDist));
-    // zoom toward pinch midpoint + pan with midpoint movement
-    tx = startTx * (newScale / startScale) + (midX - startMidX * (newScale / startScale));
-    ty = startTy * (newScale / startScale) + (midY - startMidY * (newScale / startScale));
-    scale = newScale;
+    const ns = Math.min(maxScale, Math.max(minScale, scale * dist / prevDist));
+    tx = midX - (midX - tx) * (ns / scale) + (midX - prevMidX);
+    ty = midY - (midY - ty) * (ns / scale) + (midY - prevMidY);
+    scale = ns;
+    prevDist = dist; prevMidX = midX; prevMidY = midY;
     clamp(); draw();
   }
 }, { passive: false });

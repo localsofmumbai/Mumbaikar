@@ -1,4 +1,4 @@
-const CACHE = 'mumbaikar-v2';
+const CACHE = 'mumbaikar-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -9,7 +9,15 @@ const ASSETS = [
   './tos.html',
   './manifest.json',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/LOM-ID.svg',
+  './icons/screen-map.svg',
+  './icons/thumb-hybrid.png',
+  './icons/thumb-curve.png',
+  './icons/lovemumbai-circle.svg',
+  './icons/nav-map.svg',
+  './icons/nav-suburban.svg',
+  './icons/nav-ticket.svg'
 ];
 
 self.addEventListener('install', e => {
