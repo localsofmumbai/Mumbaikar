@@ -1,4 +1,4 @@
-const CACHE = 'mumbaikar-v1';
+const CACHE = 'mumbaikar-v2';
 const ASSETS = [
   './',
   './index.html',
