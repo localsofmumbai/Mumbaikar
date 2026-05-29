@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.localsofmumbai.mumbaikar",
+        "sha256_cert_fingerprints": ["18:2B:0C:FE:66:CF:E5:28:CB:E4:5F:98:84:83:B4:28:E3:52:0D:71:B3:E7:19:ED:7C:EC:0B:6E:68:AE:30:3F"]
+      }
+    }]
