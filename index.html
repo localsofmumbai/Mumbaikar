@@ -14,21 +14,10 @@
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #F4A435;
+  background: #FFA80C;
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
-}
-
-/* ── Background map watermark ── */
-.bg-map {
-  position: fixed;
-  top: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 375px;
-  height: 720px;
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* ── Home screen ── */
@@ -91,12 +80,12 @@ body {
   display: block;
   box-shadow: 0 6px 24px rgba(0,0,0,0.13);
   transition: transform 0.15s;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 .map-card:active { transform: scale(0.98); }
 .map-thumb {
   width: 100%;
-  height: 210px;
+  height: 160px;
   object-fit: cover;
   object-position: center bottom;
   display: block;
@@ -107,25 +96,25 @@ body {
   text-align: center;
 }
 .map-info-name {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
-  color: #1A1A1A;
-  letter-spacing: -0.2px;
-  margin-bottom: 3px;
+  color: #251a13;
+  letter-spacing: -0.0px;
+  margin-bottom: 6px;
 }
 .map-info-category {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(26,26,26,0.38);
+  color: rgba(58, 39, 18, 0.5);
 }
 .footer {
   padding: 24px 20px 36px;
   padding-bottom: calc(36px + env(safe-area-inset-bottom));
   text-align: center;
 }
-.footer-logo { height: 22px; width: auto; opacity: 0.75; }
+.footer-logo { height: 32px; width: auto; opacity: 0.75; }
 
 /* ── Full-screen menu ── */
 .menu-screen {
@@ -142,7 +131,7 @@ body {
 
 /* Red hero section */
 .menu-hero {
-  background: #CC1B2F;
+  background: #FFA80C;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -162,7 +151,7 @@ body {
   border: none;
   cursor: pointer;
   padding: 6px;
-  color: white;
+  color: #1A1A1A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -255,7 +244,7 @@ body {
   align-items: center;
   gap: 6px;
 }
-.menu-footer-logo { height: 24px; width: auto; }
+.menu-footer-logo { height: 32px; width: auto; }
 .menu-footer-sub {
   font-size: 12px;
   color: rgba(0,0,0,0.35);
@@ -263,9 +252,6 @@ body {
 </style>
 </head>
 <body>
-
-<!-- Home screen background -->
-<img src="icons/screen-map.svg" class="bg-map" alt="" aria-hidden="true">
 
 <!-- Full-screen menu -->
 <div class="menu-screen" id="menuScreen">
@@ -305,6 +291,7 @@ body {
       <button class="nav-secondary-item" onclick="shareApp()">Share this App</button>
       <a href="mailto:contact@localsofmumbai.com" class="nav-secondary-item">Feedback</a>
       <a href="tos.html" class="nav-secondary-item">Terms and Conditions</a>
+      <a href="privacy.html" class="nav-secondary-item">Privacy Policy</a>
     </div>
 
     <div style="flex:1"></div>

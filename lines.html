@@ -19,7 +19,7 @@ body {
   padding: 14px 16px;
   padding-top: calc(14px + env(safe-area-inset-top));
   display: flex; align-items: center; gap: 10px;
-  position: sticky; top: 0; z-index: 10;
+  position: sticky; top: 0; z-index: 10; position: relative;
 }
 .back-btn {
   background: none; border: none;
@@ -29,7 +29,7 @@ body {
   font-family: inherit;
 }
 .back-btn svg { width: 20px; height: 20px; }
-.topbar-title { color: white; font-size: 17px; font-weight: 600; }
+.topbar-title { color: white; font-size: 17px; font-weight: 600; position: absolute; left: 50%; transform: translateX(-50%); }
 .content {
   padding: 24px 20px 40px;
   max-width: 600px;
